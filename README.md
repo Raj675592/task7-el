@@ -1,6 +1,8 @@
 ## clone the repository https://github.com/Raj675592/task7-el  on any code editor
 ## click "Go Live" in vscode or open index.html in any browser
 
+## live web page https://raj675592.github.io/task7-el/
+
 ### ✨ Features
 Core Functionality
 
