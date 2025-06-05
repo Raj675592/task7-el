@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data Fetcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .reload-btn {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .reload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .reload-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #6b7280;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .error h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 30px;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .user-info h3 {
+            font-size: 1.3rem;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .user-info .username {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .user-details {
+            space-y: 15px;
+
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .address {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .company-info {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .stats {
+            background: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .stats h3 {
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .stats-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        @media (max-width: 768px) {
+            .users-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .user-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>User Data Fetcher</h1>
+            <p>Fetching user data from JSONPlaceholder API using JavaScript Fetch API</p>
+        </div>
+
+        <div class="controls">
+            <button class="reload-btn" id="reloadBtn" onclick="fetchUsers()">
+                Load Users
+            </button>
+        </div>
+
+        <div id="content">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <h3>Total Users Loaded</h3>
+            <div class="stats-value" id="userCount">0</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://jsonplaceholder.typicode.com/users';
+        const contentDiv = document.getElementById('content');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statsDiv = document.getElementById('stats');
+        const userCountDiv = document.getElementById('userCount');
+
+        // Function to show loading state
+        function showLoading() {
+            contentDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Fetching user data...</p>
+                </div>
+            `;
+            reloadBtn.disabled = true;
+            reloadBtn.textContent = 'Loading...';
+            statsDiv.style.display = 'none';
+        }
+
+        // Function to show error state
+        function showError(message) {
+            contentDiv.innerHTML = `
+                <div class="error">
+                    <h3>❌ Error Loading Data</h3>
+                    <p>${message}</p>
+                    <p><strong>Troubleshooting Tips:</strong></p>
+                    <ul style="text-align: left; margin-top: 10px;">
+                        <li>Check your internet connection</li>
+                        <li>Try disabling browser extensions</li>
+                        <li>Clear browser cache and cookies</li>
+                        <li>Try again in a few moments</li>
+                    </ul>
+                </div>
+            `;
+            reloadBtn.disabled = false;
+            reloadBtn.textContent = 'Retry Loading';
+            statsDiv.style.display = 'none';
+        }
+
+        // Function to get user initials for avatar
+        function getUserInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').toUpperCase();
+        }
+
+        // Function to format address
+        function formatAddress(address) {
+            return `${address.street}, ${address.suite}<br>
+                    ${address.city}, ${address.zipcode}<br>
+                    <strong>Coordinates:</strong> ${address.geo.lat}, ${address.geo.lng}`;
+        }
+
+        // Function to display users
+        function displayUsers(users) {
+            if (!users || users.length === 0) {
+                showError('No users data received from the API.');
+                return;
+            }
+
+            const usersHTML = users.map(user => `
+                <div class="user-card">
+                    <div class="user-header">
+                        <div class="user-avatar">
+                            ${getUserInitials(user.name)}
+                        </div>
+                        <div class="user-info">
+                            <h3>${user.name}</h3>
+                            <div class="username">@${user.username}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-details">
+                        <div class="detail-item">
+                            <span class="detail-label">📧 Email</span>
+                            <div class="detail-value">
+                                <a href="mailto:${user.email}" style="color: #4f46e5; text-decoration: none;">
+                                    ${user.email}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">📱 Phone</span>
+                            <div class="detail-value">${user.phone}</div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">🌐 Website</span>
+                            <div class="detail-value">
+                                <a href="http://${user.website}" target="_blank" style="color: #4f46e5; text-decoration: none;">
+                                    ${user.website}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">🏠 Address</span>
+                            <div class="detail-value address">
+                                ${formatAddress(user.address)}
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">🏢 Company</span>
+                            <div class="detail-value company-info">
+                                <strong>${user.company.name}</strong><br>
+                                <em>"${user.company.catchPhrase}"</em><br>
+                                <small>${user.company.bs}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            contentDiv.innerHTML = `<div class="users-grid">${usersHTML}</div>`;
+            
+            // Show stats
+            userCountDiv.textContent = users.length;
+            statsDiv.style.display = 'block';
+            
+            // Reset button
+            reloadBtn.disabled = false;
+            reloadBtn.textContent = 'Reload Users';
+        }
+    
+        // Main function to fetch users
+        async function fetchUsers() {
+            showLoading();
+
+            try {
+                console.log('Fetching users from:', API_URL);
+                
+                // Fetch data from API
+                const response = await fetch(API_URL);
+                
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+                }
+
+                // Parse JSON
+                const users = await response.json();
+                console.log('Fetched users:', users);
+
+                // Display users
+                displayUsers(users);
+
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                
+                // Handle different types of errors
+                let errorMessage = 'Failed to fetch user data. ';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage += 'Network error - please check your internet connection.';
+                } else if (error.message.includes('HTTP Error')) {
+                    errorMessage += `Server error: ${error.message}`;
+                } else {
+                    errorMessage += `${error.message}`;
+                }
+                
+                showError(errorMessage);
+            }
+        }
+
+        // Add keyboard shortcut for reload (Ctrl+R or Cmd+R)
+        document.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+                event.preventDefault();
+                fetchUsers();
+            }
+        });
+
+        // Initial load message
+        contentDiv.innerHTML = `
+            <div class="loading">
+                <p style="font-size: 1.2rem; color: #6b7280;">
+                    👋 Welcome! Click "Load Users" to fetch data from the API.
+                </p>
+                <p style="margin-top: 10px; color: #9ca3af;">
+                    <strong>Testing Tips:</strong><br>
+                    • Try disabling your internet to test error handling<br>
+                    • Use browser dev tools to monitor network requests<br>
+                    • Press Ctrl+R (or Cmd+R) to reload data
+                </p>
+            </div>
+        `;
+    </script>
+</body>
+</html>
